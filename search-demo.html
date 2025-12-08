@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Demo - Singhal Law Firm</title>
+    <link rel="icon" type="image/x-icon" href="Media/logo web.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div style="padding: 40px; max-width: 800px; margin: 0 auto;">
+        <h1>Search Functionality Demo</h1>
+        <p>This page demonstrates the search functionality for the law firm website.</p>
+        
+        <div style="margin: 30px 0;">
+            <h2>Sample Content</h2>
+            <button id="load-sample-data" style="background: #3b82f6; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; margin-bottom: 20px;">
+                Load Sample Data
+            </button>
+            <div id="status-message" style="margin: 10px 0; padding: 10px; border-radius: 4px; display: none;"></div>
+        </div>
+
+        <div style="margin: 30px 0;">
+            <h2>Test Search</h2>
+            <p>Click the button above to load sample data, then go to any page and test the search functionality.</p>
+            <ul>
+                <li>Search for "contract" - should find contract-related articles</li>
+                <li>Search for "court" - should find news about court cases</li>
+                <li>Search for "legal advice" - should find relevant content</li>
+                <li>Search for "property" - should find property law content</li>
+            </ul>
+        </div>
+
+        <div style="margin: 30px 0;">
+            <h2>Features Implemented</h2>
+            <ul>
+                <li>✅ Search dropdown with instant results</li>
+                <li>✅ Enhanced search scoring (exact matches, word boundaries, phrase matching)</li>
+                <li>✅ Search across Articles, News, and Videos</li>
+                <li>✅ Full-page search results on media page</li>
+                <li>✅ Responsive design with dark mode support</li>
+                <li>✅ Click to navigate to full content</li>
+                <li>✅ Debounced search to prevent excessive API calls</li>
+                <li>✅ Keyboard navigation (Enter to search)</li>
+            </ul>
+        </div>
+
+        <div style="margin: 30px 0;">
+            <a href="index.html" style="background: #3b82f6; color: white; text-decoration: none; padding: 12px 20px; border-radius: 6px; display: inline-block;">
+                Go to Homepage
+            </a>
+            <a href="media.html" style="background: #10b981; color: white; text-decoration: none; padding: 12px 20px; border-radius: 6px; display: inline-block; margin-left: 10px;">
+                Go to Media Page
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('load-sample-data').addEventListener('click', function() {
+            const sampleData = [
+                {
+                    id: 'article-1',
+                    type: 'article',
+                    title: 'Understanding Contract Law: A Comprehensive Guide',
+                    description: 'Learn the fundamentals of contract law and how it affects your business dealings.',
+                    content: '<p>Contract law forms the backbone of business relationships. Understanding the essential elements of a valid contract - offer, acceptance, consideration, and mutual consent - is crucial for any business owner.</p><p>This comprehensive guide covers breach of contract, remedies, and enforcement mechanisms available under Indian law.</p>',
+                    thumbnailUrl: 'https://placehold.co/600x400/3b82f6/ffffff?text=Contract+Law',
+                    mainImageUrl: 'https://placehold.co/800x400/3b82f6/ffffff?text=Contract+Law+Guide',
+                    date: '2024-10-01',
+                    meta: 'Contract Law, Business Law, Legal Guide'
+                },
+                {
+                    id: 'article-2',
+                    type: 'article',
+                    title: 'Property Law Essentials for Home Buyers',
+                    description: 'Essential legal considerations when purchasing property in India.',
+                    content: '<p>Buying property is one of the most significant investments you will make. This article covers due diligence, title verification, and legal documentation required for property transactions.</p><p>We discuss common pitfalls and how to avoid them, ensuring your property purchase is legally sound.</p>',
+                    thumbnailUrl: 'https://placehold.co/600x400/10b981/ffffff?text=Property+Law',
+                    mainImageUrl: 'https://placehold.co/800x400/10b981/ffffff?text=Property+Law+Guide',
+                    date: '2024-09-28',
+                    meta: 'Property Law, Real Estate, Legal Advice'
+                },
+                {
+                    id: 'news-1',
+                    type: 'news',
+                    title: 'Supreme Court Landmark Ruling on Digital Privacy',
+                    description: 'Recent Supreme Court judgment strengthens digital privacy rights for citizens.',
+                    content: '<p>In a landmark judgment, the Supreme Court has reinforced the fundamental right to privacy in the digital age. The court ruled that individuals have the right to control their personal data.</p><p>This decision will have far-reaching implications for tech companies and data collection practices in India.</p>',
+                    thumbnailUrl: 'https://placehold.co/600x400/ef4444/ffffff?text=Privacy+News',
+                    mainImageUrl: 'https://placehold.co/800x400/ef4444/ffffff?text=Supreme+Court+News',
+                    date: '2024-10-02',
+                    meta: 'Supreme Court, Privacy Rights, Digital Law'
+                },
+                {
+                    id: 'news-2',
+                    type: 'news',
+                    title: 'New Corporate Compliance Requirements Announced',
+                    description: 'Government announces new compliance requirements for corporate entities.',
+                    content: '<p>The Ministry of Corporate Affairs has announced new compliance requirements that will come into effect from January 2025. These changes aim to increase transparency and accountability in corporate governance.</p><p>Companies need to prepare for enhanced reporting requirements and stricter penalties for non-compliance.</p>',
+                    thumbnailUrl: 'https://placehold.co/600x400/f59e0b/ffffff?text=Corporate+News',
+                    mainImageUrl: 'https://placehold.co/800x400/f59e0b/ffffff?text=Corporate+Compliance',
+                    date: '2024-09-30',
+                    meta: 'Corporate Law, Compliance, Government Regulations'
+                },
+                {
+                    id: 'video-1',
+                    type: 'video',
+                    title: 'Legal Advice for Startups: What You Need to Know',
+                    description: 'Essential legal considerations for entrepreneurs starting a new business.',
+                    content: 'This video covers incorporation, intellectual property protection, and compliance requirements for startups.',
+                    thumbnailUrl: 'https://placehold.co/600x400/8b5cf6/ffffff?text=Startup+Legal',
+                    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                    date: '2024-09-25',
+                    meta: 'Startup Law, Business Legal Advice, Entrepreneurship'
+                },
+                {
+                    id: 'video-2',
+                    type: 'video',
+                    title: 'Understanding Court Procedures in Civil Cases',
+                    description: 'A detailed walkthrough of civil court procedures and what to expect.',
+                    content: 'Learn about filing procedures, court etiquette, and the litigation process in civil matters.',
+                    thumbnailUrl: 'https://placehold.co/600x400/ec4899/ffffff?text=Court+Procedures',
+                    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                    date: '2024-09-20',
+                    meta: 'Civil Law, Court Procedures, Litigation'
+                }
+            ];
+
+            // Store the sample data in localStorage
+            localStorage.setItem('mediaContent', JSON.stringify(sampleData));
+            
+            // Show success message
+            const statusMessage = document.getElementById('status-message');
+            statusMessage.textContent = 'Sample data loaded successfully! You can now test the search functionality on any page.';
+            statusMessage.style.backgroundColor = '#dcfce7';
+            statusMessage.style.color = '#166534';
+            statusMessage.style.border = '1px solid #bbf7d0';
+            statusMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

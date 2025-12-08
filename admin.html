@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Post Content</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <div id="login-container">
+        <!-- Supabase SDK -->
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <!-- Runtime env for Supabase -->
+        <script>
+            window.__env = {
+                SUPABASE_URL: 'https://iepexiwwejqcqbeuelml.supabase.co',
+                SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllcGV4aXd3ZWpxY3FiZXVlbG1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NjE0NTAsImV4cCI6MjA4MDUzNzQ1MH0.i0kAwGa_WgFkKFCo4eYRqkUmI1Rb7_d0-Zwr2h6OEBg'
+            };
+        </script>
+        <!-- Supabase client helpers must load before admin.js -->
+        <script src="supabase-client.js"></script>
+        <div class="login-box">
+            <h2>Admin Login</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="publish-btn">Login</button>
+                <p id="login-error" style="color: #ef4444; text-align: center; margin-top: 15px; height: 20px;"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="admin-wrapper" style="display: none;">
+        <header class="site-header">
+            <div class="header-container">
+                <div class="header-brand">
+                    <div class="logo"><i class="fa-solid fa-user-shield"></i></div>
+                    <div class="brand-text">
+                        <span class="brand-title">Admin Panel</span>
+                        <span class="brand-subtitle">Content Publisher</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+    
+        <main class="admin-main">
+            <div class="editor-container">
+                <h1>Create New Post</h1>
+                <form id="post-form">
+                    <input type="hidden" id="post-id">
+                    <div class="form-group">
+                        <label for="post-type">Content Type</label>
+                        <select id="post-type" name="post-type">
+                            <option value="article">Article</option>
+                            <option value="news">News</option>
+                            <option value="video">Video</option>
+                            <option value="document">Document</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-title">Title</label>
+                        <input type="text" id="post-title" placeholder="Enter the title" required>
+                    </div>
+    
+                    <div id="video-fields" style="display: none;">
+                        <div class="form-group">
+                            <label for="post-video-url">YouTube Video URL</label>
+                            <input type="url" id="post-video-url" placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
+                    </div>
+
+                    <div id="document-fields" style="display: none;">
+                        <div class="form-group">
+                            <label for="post-document-upload">Upload Document *</label>
+                            <small class="help-text">Supported formats: PDF, DOCX, DOC, XLSX, XLS, PPT, PPTX, TXT</small>
+                            <input type="file" id="post-document-upload" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf">
+                            <div id="document-preview" class="document-preview"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="post-document-description">Description</label>
+                            <textarea id="post-document-description" rows="4" placeholder="Brief description of the document..."></textarea>
+                        </div>
+                    </div>
+    
+                    <div class="form-group image-uploader-group">
+                        <label id="thumbnail-label">Thumbnail Image (Optional)</label>
+                        <small class="help-text">Leave empty to use a placeholder image</small>
+                        <div class="image-upload-options">
+                            <label><input type="radio" name="thumbnail-source" value="url" checked> URL</label>
+                            <label><input type="radio" name="thumbnail-source" value="upload"> Upload</label>
+                        </div>
+                        <input type="url" id="post-thumbnail-url" class="image-input" placeholder="https://example.com/thumbnail.jpg (optional)">
+                        <input type="file" id="post-thumbnail-upload" class="image-input" style="display: none;" accept="image/*">
+                        <img id="thumbnail-preview" class="image-preview" src="" alt="Thumbnail Preview">
+                    </div>
+    
+                    <div id="content-fields">
+                        <div class="form-group">
+                            <label for="post-author">Author / Meta</label>
+                            <input type="text" id="post-author" placeholder="e.g., Published by Jane Doe">
+                        </div>
+                        <div class="form-group image-uploader-group">
+                            <label>Main Post Image (Optional)</label>
+                            <small class="help-text">Leave empty to show no image in the article</small>
+                            <div class="image-upload-options">
+                                <label><input type="radio" name="main-image-source" value="url" checked> URL</label>
+                                <label><input type="radio" name="main-image-source" value="upload"> Upload</label>
+                            </div>
+                            <input type="url" id="post-main-image-url" class="image-input" placeholder="https://example.com/main-image.jpg (optional)">
+                            <input type="file" id="post-main-image-upload" class="image-input" style="display: none;" accept="image/*">
+                            <img id="main-image-preview" class="image-preview" src="" alt="Main Image Preview">
+                        </div>
+    
+                        <div class="editor-toolbar">
+                            <button type="button" class="toolbar-btn" data-command="bold"><i class="fas fa-bold"></i></button>
+                            <button type="button" class="toolbar-btn" data-command="italic"><i class="fas fa-italic"></i></button>
+                            <button type="button" class="toolbar-btn" data-command="underline"><i class="fas fa-underline"></i></button>
+                            <button type="button" class="toolbar-btn" data-command="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
+                            <button type="button" class="toolbar-btn" data-command="createLink"><i class="fas fa-link"></i></button>
+                            <button type="button" class="toolbar-btn" id="insert-image-btn"><i class="fas fa-image"></i></button>
+                            <button type="button" class="toolbar-btn" id="format-text-btn"><i class="fas fa-palette"></i></button>
+                            <button type="button" class="toolbar-btn" id="attach-document-btn"><i class="fas fa-paperclip"></i></button>
+                            <select class="toolbar-select" data-command="fontSize">
+                                <option value="3">Normal</option>
+                                <option value="5">Heading</option>
+                                <option value="2">Small</option>
+                            </select>
+                        </div>
+                        
+                        <input type="file" id="image-upload-input" accept="image/*, image/gif" style="display: none;">
+                        <input type="file" id="document-upload-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf" style="display: none;">
+                        <div id="post-content" class="editor-content" contenteditable="true" role="textbox" aria-multiline="true"></div>
+                    </div>
+    
+                    <button type="submit" id="publish-btn" class="publish-btn">Publish Content</button>
+                    <p id="publish-success" style="margin-top:8px;color:#16a34a;height:20px;"></p>
+                </form>
+            </div>
+    
+            <div class="content-management-container">
+                <h2>Manage Content</h2>
+                
+                <div class="content-section">
+                    <h3><i class="fas fa-newspaper"></i> Articles</h3>
+                    <div class="content-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Thumbnail</th>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="article-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+    
+                <div class="content-section">
+                    <h3><i class="fas fa-bullhorn"></i> News</h3>
+                    <div class="content-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Thumbnail</th>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="news-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+    
+                <div class="content-section">
+                    <h3><i class="fas fa-video"></i> Videos</h3>
+                    <div class="content-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Thumbnail</th>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="video-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Document List -->
+                <div class="content-category">
+                    <h3><i class="fas fa-file-pdf"></i> Documents</h3>
+                    <div class="content-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Thumbnail</th>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="document-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Gallery Management -->
+                <div class="content-section">
+                    <h3><i class="fas fa-images"></i> Gallery</h3>
+                    <div class="form-group image-uploader-group">
+                        <label>Add Image to Gallery</label>
+                        <div class="image-upload-options">
+                            <label><input type="radio" name="gallery-image-source" value="url" checked> URL</label>
+                            <label><input type="radio" name="gallery-image-source" value="upload"> Upload</label>
+                        </div>
+                        <input type="url" id="gallery-image-url" class="image-input" placeholder="https://example.com/image.jpg">
+                        <input type="file" id="gallery-image-upload" class="image-input" style="display: none;" accept="image/*">
+                        <div style="margin-top: 10px;">
+                            <button type="button" id="add-gallery-image-btn" class="publish-btn" style="padding: 8px 14px;">Add Image</button>
+                            <p id="gallery-success" style="margin-top:8px;color:#16a34a;height:20px;"></p>
+                        </div>
+                    </div>
+
+                    <div class="content-table-wrapper" style="margin-top: 20px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Source</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gallery-image-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="confirm-modal-overlay">
+        <div class="confirm-modal-content">
+            <h4>Confirm Deletion</h4>
+            <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+            <div class="confirm-modal-actions">
+                <button id="confirm-delete-btn" class="btn-danger">Yes, Delete</button>
+                <button id="cancel-delete-btn" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Format Modal -->
+    <div id="format-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4><i class="fas fa-palette"></i> Text Formatting</h4>
+                <button class="modal-close-btn" id="format-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="format-section">
+                    <h5>Text Style</h5>
+                    <div class="format-buttons">
+                        <button type="button" class="format-btn" data-format="highlight"><i class="fas fa-highlighter"></i> Highlight</button>
+                        <button type="button" class="format-btn" data-format="quote"><i class="fas fa-quote-left"></i> Quote</button>
+                        <button type="button" class="format-btn" data-format="code"><i class="fas fa-code"></i> Code</button>
+                        <button type="button" class="format-btn" data-format="strikethrough"><i class="fas fa-strikethrough"></i> Strikethrough</button>
+                    </div>
+                </div>
+                <div class="format-section">
+                    <h5>Text Color</h5>
+                    <div class="color-palette">
+                        <button type="button" class="color-btn" data-color="#000000" style="background-color: #000000;" title="Black"></button>
+                        <button type="button" class="color-btn" data-color="#dc2626" style="background-color: #dc2626;" title="Red"></button>
+                        <button type="button" class="color-btn" data-color="#16a34a" style="background-color: #16a34a;" title="Green"></button>
+                        <button type="button" class="color-btn" data-color="#2563eb" style="background-color: #2563eb;" title="Blue"></button>
+                        <button type="button" class="color-btn" data-color="#ca8a04" style="background-color: #ca8a04;" title="Orange"></button>
+                        <button type="button" class="color-btn" data-color="#7c3aed" style="background-color: #7c3aed;" title="Purple"></button>
+                    </div>
+                </div>
+                <div class="format-section">
+                    <h5>Background Color</h5>
+                    <div class="color-palette">
+                        <button type="button" class="bg-color-btn" data-bg-color="transparent" style="background: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 8px 8px; background-position: 0 0, 0 4px, 4px -4px, -4px 0px;" title="No Background"></button>
+                        <button type="button" class="bg-color-btn" data-bg-color="#fef3c7" style="background-color: #fef3c7;" title="Yellow"></button>
+                        <button type="button" class="bg-color-btn" data-bg-color="#dbeafe" style="background-color: #dbeafe;" title="Blue"></button>
+                        <button type="button" class="bg-color-btn" data-bg-color="#dcfce7" style="background-color: #dcfce7;" title="Green"></button>
+                        <button type="button" class="bg-color-btn" data-bg-color="#fce7f3" style="background-color: #fce7f3;" title="Pink"></button>
+                        <button type="button" class="bg-color-btn" data-bg-color="#f3e8ff" style="background-color: #f3e8ff;" title="Purple"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Attachment Modal -->
+    <div id="document-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4><i class="fas fa-paperclip"></i> Attach Document</h4>
+                <button class="modal-close-btn" id="document-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="document-upload-section">
+                    <div class="upload-area" id="document-drop-area">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <h5>Upload Document</h5>
+                        <p>Drag and drop your file here or click to browse</p>
+                        <button type="button" class="browse-btn" id="browse-documents-btn">Browse Files</button>
+                        <div class="file-types">
+                            <small>Supported: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, RTF</small>
+                        </div>
+                    </div>
+                    <div id="document-preview-modal" class="document-preview" style="display: none;">
+                        <div class="document-info">
+                            <i class="fas fa-file document-icon"></i>
+                            <div class="document-details">
+                                <div class="document-name"></div>
+                                <div class="document-size"></div>
+                            </div>
+                            <button type="button" class="remove-document-btn" title="Remove document">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="document-options">
+                    <div class="form-group">
+                        <label for="document-title">Display Title (Optional)</label>
+                        <input type="text" id="document-title" placeholder="e.g., Legal Agreement Template">
+                    </div>
+                    <div class="form-group">
+                        <label for="document-description">Description (Optional)</label>
+                        <textarea id="document-description" rows="3" placeholder="Brief description of the document"></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-primary" id="insert-document-btn">Insert Document</button>
+                    <button type="button" class="btn-secondary" id="cancel-document-btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Supabase SDK and client init for local testing -->
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script>
+            // Replace with your actual project values
+            window.__env = {
+                SUPABASE_URL: 'https://ycfiitdetwwcuysgveur.supabase.co',
+                SUPABASE_ANON_KEY: 'sb-publishable-hQ49x49qvv_riDmkoI-SwA_FwaI5vI3' // example from your screenshot
+            };
+        </script>
+        <script src="supabase-client.js"></script>
+        <script src="admin.js"></script>
+</body>
+</html>
+

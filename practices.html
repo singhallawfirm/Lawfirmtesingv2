@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practices - Singhal Law Firm</title>
+    <link rel="icon" type="image/x-icon" href="Media\logo web.png">
+    <!-- Link to the external stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <!-- The header section -->
+    <header class="site-header">
+        <div class="header-container">
+            <!-- Logo and Brand Name -->
+            <a href="index.html" class="header-brand-link">
+                <div class="header-brand">
+                    <div class="logo">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-title">Singhal Law Firm</span>
+                        <span class="brand-subtitle">Legal Excellence</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Navigation Links -->
+            <nav class="header-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="firm.html">The Firm</a></li>
+                    <li><a href="media.html">Media & Publication</a></li>
+                    <li><a href="practices.html">Practices</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </nav>
+
+            <!-- Header Actions: Search and Theme Toggle -->
+            <div class="header-actions">
+                <button id="search-toggle" class="search-toggle-button" aria-label="Toggle search">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+                <input type="search" id="search-input" class="search-input" placeholder="Search...">
+                <button id="theme-toggle" class="theme-toggle-button" aria-label="Toggle theme">
+                    <i class="fa-solid fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content: Legal Services -->
+    <main>
+        <section class="legal-services-section">
+            <h2>Legal Services</h2>
+            <p class="subtitle">Comprehensive legal solutions tailored to meet your specific needs with professional excellence and personal attention. Click on any practice area to learn more.</p>
+            <div class="services-grid">
+                <!-- Civil Litigation -->
+                <div id="civil-litigation" class="service-card expandable" data-image="https://placehold.co/800x300/334155/ffffff?text=Civil+Litigation">
+                    <div class="icon"><i class="fas fa-file-signature"></i></div>
+                    <h3>Civil Litigation</h3>
+                    <p>Comprehensive representation in civil matters with a strategic approach to dispute resolution.</p>
+                    <div class="practice-details" style="display: none;">
+                        <p>Our firm provides robust representation in all aspects of civil litigation. We handle cases from inception through trial and appeal, covering a wide range of disputes including contractual disagreements, property disputes, personal injury claims, and commercial conflicts. We focus on developing a strategic approach tailored to the unique circumstances of each case, aiming for efficient and favorable resolutions, whether through negotiation, mediation, or courtroom advocacy.</p>
+                    </div>
+                </div>
+                <!-- Criminal Defense -->
+                <div id="criminal-defense" class="service-card expandable" data-image="https://placehold.co/800x300/334155/ffffff?text=Criminal+Defense">
+                    <div class="icon"><i class="fas fa-shield-halved"></i></div>
+                    <h3>Criminal Defense</h3>
+                    <p>Expert criminal defense services with a commitment to protecting your rights and interests.</p>
+                     <div class="practice-details" style="display: none;">
+                        <p>We offer a vigorous defense for individuals facing criminal charges. Our expertise covers a wide spectrum of criminal law, from minor infractions to serious felonies. We are dedicated to safeguarding our clients' rights at every stage of the legal process, from investigation and arrest to trial and sentencing. Our goal is to ensure a fair process and achieve the best possible outcome for our clients.</p>
+                    </div>
+                </div>
+                <!-- Property Law -->
+                <div id="property-law" class="service-card expandable" data-image="https://placehold.co/800x300/334155/ffffff?text=Property+Law">
+                    <div class="icon"><i class="fas fa-house-user"></i></div>
+                    <h3>Property Law</h3>
+                    <p>Complete property legal services including documentation, disputes, and transactions.</p>
+                     <div class="practice-details" style="display: none;">
+                        <p>Our property law services cater to individuals and businesses in all matters related to real estate. This includes handling transactions, drafting and reviewing lease agreements, resolving landlord-tenant disputes, and litigating property disputes. We ensure all legal aspects of property ownership and transfer are handled meticulously and efficiently.</p>
+                    </div>
+                </div>
+                <!-- Family Law -->
+                <div id="family-law" class="service-card expandable" data-image="https://placehold.co/800x300/334155/ffffff?text=Family+Law">
+                    <div class="icon"><i class="fas fa-users"></i></div>
+                    <h3>Family Law</h3>
+                    <p>Sensitive handling of family matters with a focus on amicable resolutions.</p>
+                     <div class="practice-details" style="display: none;">
+                        <p>We approach family law matters with the sensitivity and compassion they require. Our practice covers divorce, child custody and support, alimony, and adoption. While we strive for amicable resolutions through mediation and negotiation, we are prepared to advocate strongly for our clients' interests in court when necessary.</p>
+                    </div>
+                </div>
+                <!-- Alternative Dispute Resolution -->
+                <div id="dispute-resolution" class="service-card expandable" data-image="https://placehold.co/800x300/334155/ffffff?text=Dispute+Resolution">
+                    <div class="icon"><i class="fas fa-handshake"></i></div>
+                    <h3>Dispute Resolution</h3>
+                    <p>Resolving conflicts outside of the courtroom through mediation and arbitration.</p>
+                    <div class="practice-details" style="display: none;">
+                        <p>Alternative Dispute Resolution (ADR) offers a confidential and efficient way to resolve disputes without the cost and time of litigation. Our certified mediators and arbitrators facilitate constructive dialogue to help parties reach mutually agreeable solutions in a variety of civil, commercial, and family law matters.</p>
+                    </div>
+                </div>
+                <!-- Corporate Law -->
+                <div id="corporate-law" class="service-card expandable" data-image="https://placehold.co/800x300/334155/ffffff?text=Corporate+Law">
+                    <div class="icon"><i class="fas fa-building"></i></div>
+                    <h3>Corporate Law</h3>
+                    <p>Comprehensive corporate legal services for businesses of all sizes.</p>
+                    <div class="practice-details" style="display: none;">
+                        <p>Our corporate law practice provides comprehensive legal services to businesses ranging from startups to established corporations. We assist with business formation, corporate governance, mergers and acquisitions, compliance matters, and commercial contracts. Our goal is to help businesses navigate complex legal requirements while supporting their growth and success.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Practice Area Detail Modal -->
+    <div id="practice-modal" class="practice-modal-overlay">
+        <div class="practice-modal-content">
+            <button class="close-modal-btn">&times;</button>
+            <div class="practice-modal-body">
+                <!-- Content will be injected by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- The new footer section -->
+    <footer class="new-site-footer">
+        <div class="footer-main">
+            <div class="footer-column about">
+                <a href="index.html" class="footer-brand-link">
+                    <div class="footer-brand">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        <div class="brand-text">
+                            <span class="brand-title">Singhal Law Firm</span> <br>
+                            <span class="brand-subtitle">Professional Legal Services</span>
+                        </div>
+                    </div>
+                </a>
+                <!-- <p>Providing exceptional legal services with commitment to justice and client satisfaction.</p> -->
+                <a href="#" class="footer-address">
+                    <h4><i class="fas fa-map-marker-alt"></i> Court Office</h4>
+                    <p>Chamber no. 308, Western Wing Tis Hazari, Delhi-110054</p>
+                    <p class="hours">Monday - Friday: 10:00 AM - 5:00 PM</p>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=Chamber+no.+308,+Western+Wing+Tis+Hazari,+Delhi-110054" target="_blank" class="get-directions-link">
+                        <i class="fas fa-map-marked-alt"></i> Get Directions
+                    </a>
+                </a>
+                <div class="footer-social">
+                    <h4>Follow Us</h4>
+                    <div class="social-icons">
+                        <a href="https://www.linkedin.com/company/draftwiselegal/" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://www.youtube.com/@DraftWiseLegal" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                        <a href="https://www.facebook.com/profile.php?id=61577288746990&mibextid=wwXIfr&rdid=HeIk0uZGyjsljY0L&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1B7WMsiFxA%2F%3Fmibextid%3DwwXIfr#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/draftwise_legal?igsh=d3pjeDI2ejcyZ2pl&utm_source=qr" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://wa.me/1234567890" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-column links">
+                <h4>Quick Links</h4>
+                <ul>  
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="firm.html">The Firm</a></li>
+                    <li><a href="media.html">Media and Publication</a></li>
+                    <li><a href="practices.html">Practices</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-column links">
+                <h4>Practice Areas</h4>
+                <ul>
+                    <li><a href="#civil-litigation">Civil Litigation</a></li>
+                    <li><a href="#criminal-defense">Criminal Defense</a></li>
+                    <li><a href="#property-law">Property Law</a></li>
+                    <li><a href="#corporate-law">Corporate Law</a></li>
+                    <li><a href="#family-law">Family Law</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Singhal Law Firm Services.</p>
+            <p> All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Link to the external JavaScript file -->
+    <script src="main.js"></script>
+
+    <!-- WhatsApp Floating Button -->
+    <a href="https://wa.me/1234567890" target="_blank" class="whatsapp-float" aria-label="Contact us on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+        <span class="whatsapp-text">Contact Us</span>
+    </a>
+
+</body>
+</html>
+
+
+
