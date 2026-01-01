@@ -175,11 +175,57 @@ body {
     outline: none;
     color: #0f172a;
     position: relative; /* For positioning resize handles */
+    background-color: #ffffff;
 }
 
 .editor-content:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Paragraph styling in editor */
+.editor-content p {
+    margin-bottom: 16px;
+    line-height: 1.8;
+}
+
+.editor-content p:last-child {
+    margin-bottom: 0;
+}
+
+.editor-content h1,
+.editor-content h2,
+.editor-content h3,
+.editor-content h4 {
+    margin-top: 24px;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.editor-content h1:first-child,
+.editor-content h2:first-child,
+.editor-content h3:first-child,
+.editor-content h4:first-child,
+.editor-content p:first-child {
+    margin-top: 0;
+}
+
+.editor-content ul,
+.editor-content ol {
+    margin-bottom: 16px;
+    padding-left: 30px;
+}
+
+.editor-content li {
+    margin-bottom: 8px;
+}
+
+.editor-content blockquote {
+    border-left: 4px solid #3b82f6;
+    padding-left: 16px;
+    margin: 16px 0;
+    font-style: italic;
+    color: #64748b;
 }
 
 /* Styles for resizable images in the editor */
@@ -189,6 +235,7 @@ body {
     border-radius: 8px;
     cursor: pointer;
     transition: box-shadow 0.2s;
+    margin: 16px 0;
 }
 
 .editor-content img.resizable-image-selected {
@@ -686,6 +733,27 @@ body {
     font-family: inherit;
     font-size: 0.9rem;
     resize: vertical;
+    color: #0f172a;
+    background-color: #ffffff;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    color: #0f172a;
+    background-color: #ffffff;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .modal-actions {

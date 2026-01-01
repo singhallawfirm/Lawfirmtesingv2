@@ -55,7 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('[db-gallery.js] Creating item for:', image);
             const item = document.createElement('div');
             item.className = 'gallery-item show';
-            item.innerHTML = `<img src="${image}" alt="Gallery Image ${start + index + 1}">`;
+            item.innerHTML = `<img src="${image}" alt="Gallery Image ${start + index + 1}" loading="lazy">`;
+            item.dataset.index = start + index;
+            item.addEventListener('click', () => openModal(start + index));
             galleryGrid.appendChild(item);
         });
         console.log('[db-gallery.js] Gallery grid children count:', galleryGrid.children.length);
@@ -125,6 +127,80 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPage = 1;
         initGallery();
     };
+
+    // --- MODAL FUNCTIONALITY ---
+    let currentModalIndex = 0;
+
+    function openModal(index) {
+        currentModalIndex = index;
+        
+        // Create modal if it doesn't exist
+        let imageModal = document.getElementById('home-image-modal');
+        if (!imageModal) {
+            imageModal = document.createElement('div');
+            imageModal.id = 'home-image-modal';
+            imageModal.className = 'image-modal-overlay';
+            imageModal.innerHTML = `
+                <div class="image-modal-content">
+                    <button class="close-modal-btn" id="home-close-modal-btn">&times;</button>
+                    <img src="" alt="Gallery Image" id="home-modal-image">
+                    <button class="modal-nav-btn modal-prev" id="home-modal-prev">&larr;</button>
+                    <button class="modal-nav-btn modal-next" id="home-modal-next">&rarr;</button>
+                </div>
+            `;
+            document.body.appendChild(imageModal);
+            
+            // Add event listeners
+            document.getElementById('home-close-modal-btn').addEventListener('click', closeModal);
+            document.getElementById('home-modal-prev').addEventListener('click', () => navigateModal(-1));
+            document.getElementById('home-modal-next').addEventListener('click', () => navigateModal(1));
+            imageModal.addEventListener('click', (e) => {
+                if (e.target === imageModal) closeModal();
+            });
+        }
+        
+        updateModalImage();
+        imageModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        const imageModal = document.getElementById('home-image-modal');
+        if (imageModal) {
+            imageModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    function navigateModal(direction) {
+        currentModalIndex += direction;
+        if (currentModalIndex < 0) currentModalIndex = galleryImages.length - 1;
+        if (currentModalIndex >= galleryImages.length) currentModalIndex = 0;
+        updateModalImage();
+    }
+
+    function updateModalImage() {
+        const modalImage = document.getElementById('home-modal-image');
+        const modalPrev = document.getElementById('home-modal-prev');
+        const modalNext = document.getElementById('home-modal-next');
+        
+        if (modalImage && galleryImages[currentModalIndex]) {
+            modalImage.src = galleryImages[currentModalIndex];
+        }
+        
+        if (modalPrev) modalPrev.style.display = galleryImages.length > 1 ? 'block' : 'none';
+        if (modalNext) modalNext.style.display = galleryImages.length > 1 ? 'block' : 'none';
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        const imageModal = document.getElementById('home-image-modal');
+        if (imageModal && imageModal.classList.contains('active')) {
+            if (e.key === 'Escape') closeModal();
+            if (e.key === 'ArrowLeft') navigateModal(-1);
+            if (e.key === 'ArrowRight') navigateModal(1);
+        }
+    });
 
     document.addEventListener('db-data-loaded', (e) => {
         console.log('[db-gallery.js] Received db-data-loaded event:', e.detail);

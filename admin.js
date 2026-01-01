@@ -919,6 +919,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+
+        // --- HANDLE PASTE EVENT TO PRESERVE FORMATTING ---
+        editor.addEventListener('paste', (e) => {
+            e.preventDefault();
+            
+            // Get clipboard data
+            const clipboardData = e.clipboardData || window.clipboardData;
+            const htmlData = clipboardData.getData('text/html');
+            const textData = clipboardData.getData('text/plain');
+            
+            // If HTML data exists, use it to preserve formatting
+            if (htmlData) {
+                document.execCommand('insertHTML', false, htmlData);
+            } else if (textData) {
+                // Fallback to plain text
+                document.execCommand('insertText', false, textData);
+            }
+        });
     
         // --- FORM SUBMISSION (CREATE & UPDATE) ---
         form.addEventListener('submit', async (e) => {
@@ -989,7 +1007,16 @@ document.addEventListener('DOMContentLoaded', () => {
                          if(currentEditingPost && currentEditingPost.thumbnailurl) {
                              thumbnailUrl = currentEditingPost.thumbnailurl;
                          } else {
-                            const videoId = (videoUrl.match(/[?&]v=([^&]+)/) || [])[1];
+                            // Extract video ID from regular YouTube URL or Shorts URL
+                            let videoId = (videoUrl.match(/[?&]v=([^&]+)/) || [])[1];
+                            if (!videoId) {
+                                // Try to match YouTube Shorts URL pattern: youtube.com/shorts/VIDEO_ID
+                                videoId = (videoUrl.match(/\/shorts\/([^?&\/]+)/) || [])[1];
+                            }
+                            if (!videoId) {
+                                // Try to match youtu.be/VIDEO_ID pattern
+                                videoId = (videoUrl.match(/youtu\.be\/([^?&\/]+)/) || [])[1];
+                            }
                             if (videoId) {
                                 thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
                             } else {

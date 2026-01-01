@@ -62,16 +62,31 @@ document.addEventListener('DOMContentLoaded', () => {
             galleryImages.forEach((image, index) => {
                 const item = document.createElement('div');
                 item.className = 'gallery-item';
-                item.innerHTML = `<img src="${image}" alt="Gallery Image ${index + 1}">`;
+                // Add loading="lazy" for better performance
+                item.innerHTML = `<img src="${image}" alt="Gallery Image ${index + 1}" loading="lazy">`;
                 item.dataset.index = index;
                 item.style.display = 'none';
                 item.addEventListener('click', () => openModal(index));
                 galleryGrid.appendChild(item);
             });
+            
+            // Preload images for the first page
+            preloadPageImages(1);
         }
 
         showPage(currentPage);
         renderPaginationButtons();
+    }
+    
+    // Function to preload images for a specific page
+    function preloadPageImages(pageNumber) {
+        const startIndex = (pageNumber - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, galleryImages.length);
+        
+        for (let i = startIndex; i < endIndex; i++) {
+            const img = new Image();
+            img.src = galleryImages[i];
+        }
     }
 
     function showPage(pageNumber, direction = 'next') {
@@ -88,6 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const allItems = Array.from(galleryGrid.querySelectorAll('.gallery-item'));
         const previousItems = allItems.slice(prevStartIndex, prevEndIndex);
         const currentItems = allItems.slice(startIndex, endIndex);
+        
+        // Preload next page images for smoother navigation
+        if (pageNumber < totalPages) {
+            preloadPageImages(pageNumber + 1);
+        }
 
         previousItems.forEach((item, index) => {
             setTimeout(() => {

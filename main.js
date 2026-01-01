@@ -489,7 +489,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!modal) return;
         
             if (type === 'video') {
-                const videoId = (item.videourl.match(/[?&]v=([^&]+)/) || [])[1];
+                // Extract video ID from regular YouTube URL or Shorts URL
+                let videoId = (item.videourl.match(/[?&]v=([^&]+)/) || [])[1];
+                if (!videoId) {
+                    // Try to match YouTube Shorts URL pattern: youtube.com/shorts/VIDEO_ID
+                    videoId = (item.videourl.match(/\/shorts\/([^?&\/]+)/) || [])[1];
+                }
+                if (!videoId) {
+                    // Try to match youtu.be/VIDEO_ID pattern
+                    videoId = (item.videourl.match(/youtu\.be\/([^?&\/]+)/) || [])[1];
+                }
                 modal.body.innerHTML = videoId 
                     ? `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`
                     : '<p>Invalid video URL.</p>';
@@ -967,7 +976,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // !!! IMPORTANT !!! 
         // Replace this placeholder with your actual Google Apps Script Web App URL.
         // See instructions.md for details on how to get this URL.
-        const googleAppScriptURL = 'https://script.google.com/macros/s/AKfycbwDFF8DouTmkX1iaxCPkxnT11vdbWEkfVO1lqYce-e9V2R3sHQO3g1FO4irE_9gurvM/exec';
+        const googleAppScriptURL = 'https://script.google.com/macros/s/AKfycbwxuc5qtI4zJayp2T7BInHbYUbXFAdXsvaYH5W0dSHGp8qMK8ERRtTHYy74EC6lKBJL/exec';
 
         if (googleAppScriptURL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
             console.warn('Google Apps Script URL is not set in main.js. Form submissions will be simulated.');

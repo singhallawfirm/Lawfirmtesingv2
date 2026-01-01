@@ -849,23 +849,15 @@ body.dark-theme .footer-address p.hours {
     align-items: center;
     gap: 8px;
     margin-top: 12px;
-    padding: 8px 16px;
+    padding: 10px 20px;
     background-color: #3b82f6;
     color: #ffffff;
     text-decoration: none;
     border-radius: 6px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 500;
     transition: all 0.3s ease;
     border: none;
-        .header-actions {
-            position: relative;
-        }
-    margin-left: 25px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    position: relative;
 }
 
 .get-directions-link:hover {
@@ -891,7 +883,7 @@ body.dark-theme .get-directions-link:hover {
 @media (max-width: 768px) {
     .get-directions-link {
         font-size: 0.85rem;
-        padding: 6px 12px;
+        padding: 8px 14px;
     }
 }
 /* End of updated styles */
@@ -1528,7 +1520,7 @@ body.dark-theme .partner-card {
 
 .partner-card img {
     width: 100%;
-    height: auto;
+    height: 350px;
     object-fit: cover;
     display: block;
 }
