@@ -130,42 +130,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- MODAL FUNCTIONALITY ---
     let currentModalIndex = 0;
+    let imageModal = null;
+    let modalImage = null;
+    let modalPrev = null;
+    let modalNext = null;
+    let closeModalBtn = null;
+
+    function initializeModal() {
+        // Check if modal already exists
+        imageModal = document.getElementById('home-image-modal');
+        if (imageModal) {
+            modalImage = document.getElementById('home-modal-image');
+            modalPrev = document.getElementById('home-modal-prev');
+            modalNext = document.getElementById('home-modal-next');
+            closeModalBtn = document.getElementById('home-close-modal-btn');
+            return;
+        }
+
+        // Create modal if it doesn't exist
+        imageModal = document.createElement('div');
+        imageModal.id = 'home-image-modal';
+        imageModal.className = 'image-modal-overlay';
+        imageModal.innerHTML = `
+            <div class="image-modal-content">
+                <button class="close-modal-btn" id="home-close-modal-btn">&times;</button>
+                <img src="" alt="Gallery Image" id="home-modal-image">
+                <div class="modal-navigation">
+                    <button class="modal-nav-btn" id="home-modal-prev">&larr;</button>
+                    <button class="modal-nav-btn" id="home-modal-next">&rarr;</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(imageModal);
+        
+        // Get references to elements
+        modalImage = document.getElementById('home-modal-image');
+        modalPrev = document.getElementById('home-modal-prev');
+        modalNext = document.getElementById('home-modal-next');
+        closeModalBtn = document.getElementById('home-close-modal-btn');
+        
+        // Add event listeners
+        closeModalBtn.addEventListener('click', closeModal);
+        modalPrev.addEventListener('click', () => navigateModal(-1));
+        modalNext.addEventListener('click', () => navigateModal(1));
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) closeModal();
+        });
+    }
 
     function openModal(index) {
         currentModalIndex = index;
-        
-        // Create modal if it doesn't exist
-        let imageModal = document.getElementById('home-image-modal');
-        if (!imageModal) {
-            imageModal = document.createElement('div');
-            imageModal.id = 'home-image-modal';
-            imageModal.className = 'image-modal-overlay';
-            imageModal.innerHTML = `
-                <div class="image-modal-content">
-                    <button class="close-modal-btn" id="home-close-modal-btn">&times;</button>
-                    <img src="" alt="Gallery Image" id="home-modal-image">
-                    <button class="modal-nav-btn modal-prev" id="home-modal-prev">&larr;</button>
-                    <button class="modal-nav-btn modal-next" id="home-modal-next">&rarr;</button>
-                </div>
-            `;
-            document.body.appendChild(imageModal);
-            
-            // Add event listeners
-            document.getElementById('home-close-modal-btn').addEventListener('click', closeModal);
-            document.getElementById('home-modal-prev').addEventListener('click', () => navigateModal(-1));
-            document.getElementById('home-modal-next').addEventListener('click', () => navigateModal(1));
-            imageModal.addEventListener('click', (e) => {
-                if (e.target === imageModal) closeModal();
-            });
-        }
-        
+        initializeModal();
         updateModalImage();
         imageModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
 
     function closeModal() {
-        const imageModal = document.getElementById('home-image-modal');
         if (imageModal) {
             imageModal.classList.remove('active');
             document.body.style.overflow = '';
@@ -180,13 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateModalImage() {
-        const modalImage = document.getElementById('home-modal-image');
-        const modalPrev = document.getElementById('home-modal-prev');
-        const modalNext = document.getElementById('home-modal-next');
+        if (!modalImage || !galleryImages[currentModalIndex]) return;
         
-        if (modalImage && galleryImages[currentModalIndex]) {
-            modalImage.src = galleryImages[currentModalIndex];
-        }
+        modalImage.src = galleryImages[currentModalIndex];
         
         if (modalPrev) modalPrev.style.display = galleryImages.length > 1 ? 'block' : 'none';
         if (modalNext) modalNext.style.display = galleryImages.length > 1 ? 'block' : 'none';
@@ -194,7 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
-        const imageModal = document.getElementById('home-image-modal');
         if (imageModal && imageModal.classList.contains('active')) {
             if (e.key === 'Escape') closeModal();
             if (e.key === 'ArrowLeft') navigateModal(-1);

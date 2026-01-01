@@ -1379,55 +1379,89 @@ body.dark-theme .about-info-box::before {
      background: linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0) 60%);
 }
 
+.image-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.image-modal-overlay.active { 
+    display: flex; 
+}
+
+.image-modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-modal-content img {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: -50px;
+    right: 0;
+    background: transparent;
+    color: #fff;
+    border: none;
+    font-size: 3rem;
+    cursor: pointer;
+    z-index: 10000;
+    transition: transform 0.3s;
+    line-height: 1;
+}
+
+.close-modal-btn:hover {
+    transform: scale(1.2);
+}
+
+.modal-navigation {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    padding: 0 20px;
+}
+
+.modal-nav-btn {
+    background-color: rgba(59, 130, 246, 0.9);
+    color: #fff;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    pointer-events: all;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-nav-btn:hover {
+    background-color: rgba(37, 99, 235, 1);
+    transform: scale(1.1);
+}
+
 .about-info-box .info-box-content {
     position: relative;
-    .image-modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.7);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999; /* Ensure above any stacking context */
-    }
-    .image-modal-overlay.active { display: flex; }
-    .image-modal-content {
-        position: relative;
-        max-width: 90vw;
-        max-height: 90vh;
-        background: #111;
-        border-radius: 8px;
-        padding: 12px;
-    }
-    .image-modal-content img {
-        max-width: 85vw;
-        max-height: 75vh;
-        display: block;
-    }
-    .close-modal-btn {
-        position: absolute;
-        top: 8px;
-        right: 12px;
-        font-size: 24px;
-        background: transparent;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-    }
-    .modal-navigation {
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-        margin-top: 10px;
-    }
-    .modal-nav-btn {
-        padding: 6px 10px;
-        border-radius: 6px;
-        border: 1px solid rgba(255,255,255,0.2);
-        background: rgba(255,255,255,0.1);
-        color: #fff;
-        cursor: pointer;
-    }
     z-index: 1;
     padding: 30px;
     width: 100%;
@@ -1836,6 +1870,20 @@ body.dark-theme .media-card {
 
 body.dark-theme .media-card:hover {
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+/* Highlight active card when opened from search */
+.media-card.highlight-active {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.3);
+    border: 2px solid rgba(59, 130, 246, 0.5);
+    background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+}
+
+body.dark-theme .media-card.highlight-active {
+    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.4);
+    border: 2px solid rgba(59, 130, 246, 0.6);
+    background: linear-gradient(135deg, #0f172a 0%, #1a2a4a 100%);
 }
 
 .media-card-thumbnail {
@@ -2334,6 +2382,31 @@ body.dark-theme .whatsapp-float:hover {
 
     .whatsapp-text {
         font-size: 0.55rem;
+    }
+
+    /* Responsive Modal */
+    .image-modal-content {
+        max-width: 95vw;
+        max-height: 85vh;
+    }
+
+    .image-modal-content img {
+        max-height: 80vh;
+    }
+
+    .close-modal-btn {
+        top: -45px;
+        font-size: 2.5rem;
+    }
+
+    .modal-nav-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    .modal-navigation {
+        padding: 0 10px;
     }
 }
 

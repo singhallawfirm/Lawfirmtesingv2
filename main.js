@@ -74,10 +74,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (themeToggleButton) {
         const themeIcon = themeToggleButton.querySelector('i');
         const body = document.body;
-        // Apply saved theme on load
-        if (localStorage.getItem('theme') === 'dark') {
+        // Apply saved theme on load, default to dark if no preference saved
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            // Only use light theme if explicitly saved
+            body.classList.remove('dark-theme');
+            themeIcon.className = 'fa-solid fa-sun';
+        } else {
+            // Default to dark theme (when no saved preference or saved as 'dark')
             body.classList.add('dark-theme');
             themeIcon.className = 'fa-solid fa-moon';
+            if (!savedTheme) {
+                localStorage.setItem('theme', 'dark');
+            }
         }
         // Theme toggle event
         themeToggleButton.addEventListener('click', () => {
@@ -100,6 +109,118 @@ document.addEventListener('DOMContentLoaded', () => {
         // Enhanced search functionality
         let searchResultsContainer = null;
         let searchDebounceTimer = null;
+        let pageContentIndex = []; // Index of all page content
+
+        // Build comprehensive search index from page content
+        const buildPageContentIndex = () => {
+            const index = [];
+
+            // 1. Extract practice areas from practices.html if on that page
+            const serviceCards = document.querySelectorAll('.service-card');
+            if (serviceCards.length > 0) {
+                serviceCards.forEach(card => {
+                    const title = card.querySelector('h3')?.textContent?.trim() || '';
+                    const description = card.querySelector('p:not(.practice-details p)')?.textContent?.trim() || '';
+                    const details = card.querySelector('.practice-details')?.textContent?.trim() || '';
+                    const id = card.id || '';
+                    
+                    if (title) {
+                        index.push({
+                            type: 'practice',
+                            title: title,
+                            description: description,
+                            content: details,
+                            link: `practices.html#${id}`,
+                            searchText: `${title} ${description} ${details}`.toLowerCase()
+                        });
+                    }
+                });
+            }
+
+            // 2. Extract partner information from firm.html if on that page
+            const partnerCards = document.querySelectorAll('.partner-card');
+            if (partnerCards.length > 0) {
+                partnerCards.forEach((card, idx) => {
+                    const name = card.querySelector('h3')?.textContent?.trim() || '';
+                    const role = card.querySelector('.title')?.textContent?.trim() || '';
+                    const details = card.querySelector('.partner-full-details')?.textContent?.trim() || '';
+                    const quote = card.querySelector('.quote')?.textContent?.trim() || '';
+                    
+                    if (name) {
+                        index.push({
+                            type: 'partner',
+                            title: name,
+                            description: `${role} - ${quote}`.trim(),
+                            content: details,
+                            link: `firm.html#partners-section`,
+                            searchText: `${name} ${role} ${quote} ${details}`.toLowerCase()
+                        });
+                    }
+                });
+            }
+
+            // 3. Extract main content sections from current page
+            const sections = document.querySelectorAll('section, [role="main"] > div');
+            sections.forEach(section => {
+                const heading = section.querySelector('h1, h2, h3');
+                if (heading) {
+                    const title = heading.textContent.trim();
+                    const paragraphs = Array.from(section.querySelectorAll('p'))
+                        .map(p => p.textContent.trim())
+                        .filter(text => text && !text.includes('Click') && text.length > 10)
+                        .slice(0, 3)
+                        .join(' ');
+                    
+                    if (title && title.length > 3) {
+                        index.push({
+                            type: 'page',
+                            title: title,
+                            description: paragraphs.substring(0, 150),
+                            content: paragraphs,
+                            link: window.location.pathname,
+                            searchText: `${title} ${paragraphs}`.toLowerCase()
+                        });
+                    }
+                }
+            });
+
+            // 4. Extract all headings and their associated content as searchable items
+            const allHeadings = document.querySelectorAll('h2, h3, h4');
+            allHeadings.forEach(heading => {
+                const text = heading.textContent.trim();
+                if (text && text.length > 3 && text.length < 100 && !text.includes('Click')) {
+                    // Get the next paragraph or content
+                    let nextContent = '';
+                    let current = heading.nextElementSibling;
+                    for (let i = 0; i < 2 && current; i++) {
+                        if (current.tagName.match(/^(P|DIV|SPAN)$/i)) {
+                            const contentText = current.textContent.trim();
+                            if (contentText.length > 10) {
+                                nextContent += contentText + ' ';
+                            }
+                        }
+                        current = current.nextElementSibling;
+                    }
+
+                    if (nextContent.length > 10 && !nextContent.includes('Click')) {
+                        index.push({
+                            type: 'content',
+                            title: text,
+                            description: nextContent.substring(0, 150),
+                            content: nextContent,
+                            link: window.location.pathname + '#' + (heading.id || ''),
+                            searchText: `${text} ${nextContent}`.toLowerCase()
+                        });
+                    }
+                }
+            });
+
+            return index;
+        };
+
+        // Build initial index
+        pageContentIndex = buildPageContentIndex();
+        console.log('[main.js] Page content index built:', pageContentIndex.length, 'items');
 
         // Create search results container
         const createSearchResultsContainer = () => {
@@ -122,6 +243,60 @@ document.addEventListener('DOMContentLoaded', () => {
             return searchResultsContainer;
         };
 
+        // Enhanced scoring algorithm - improved for numbers and special characters
+        const scoreMatch = (searchTerms, normalizedQuery, text = '') => {
+            let score = 0;
+            let matchingTerms = 0;
+
+            // Exact phrase match (highest priority)
+            if (text.includes(normalizedQuery)) score += 100;
+
+            // Individual term scoring
+            searchTerms.forEach(term => {
+                let termScore = 0;
+                
+                // Try word boundary matching first (for regular words)
+                try {
+                    // Escape special regex characters
+                    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const wordRegex = new RegExp(`\\b${escapedTerm}\\b`, 'i');
+                    
+                    if (wordRegex.test(text)) {
+                        termScore += 30; // Whole word match
+                    }
+                } catch (e) {
+                    // If regex fails, skip word boundary matching
+                }
+                
+                // Always check for substring match as fallback
+                if (termScore === 0 && text.includes(term)) {
+                    termScore += 15; // Partial match
+                }
+                
+                // Boost score for substring match if not already scored
+                if (termScore === 0) {
+                    // Check if term appears at word boundaries (simple check for numbers)
+                    const regex = new RegExp(`(^|\\s|-)${term}(\\s|$|[^a-z0-9])`, 'i');
+                    if (regex.test(text)) {
+                        termScore += 25; // Strong match for numbers/special content
+                    } else if (text.toLowerCase().includes(term.toLowerCase())) {
+                        termScore += 10; // Partial text match
+                    }
+                }
+
+                if (termScore > 0) {
+                    matchingTerms++;
+                    score += termScore;
+                }
+            });
+
+            // Bonus for matching multiple terms
+            if (matchingTerms > 1) score += matchingTerms * 10;
+            if (matchingTerms === searchTerms.length) score += 50;
+
+            return { score, matchingTerms };
+        };
+
         // Search function that indexes all content
         const performSearch = (query) => {
             if (!query || query.length < 2) {
@@ -135,56 +310,51 @@ document.addEventListener('DOMContentLoaded', () => {
             const normalizedQuery = query.toLowerCase().trim();
             const searchTerms = normalizedQuery.split(/\s+/).filter(term => term.length > 0);
 
-            // Search through all media content (Articles, News, Videos)
+            // 1. Search through media content (Articles, News, Videos)
             mediaData.forEach(item => {
-                let score = 0;
-                let matchingTerms = 0;
-                
                 const title = (item.title || '').toLowerCase();
                 const description = (item.description || '').toLowerCase();
-                const content = (item.content || '').toLowerCase().replace(/<[^>]*>/g, ''); // Strip HTML tags
+                const content = (item.content || '').toLowerCase().replace(/<[^>]*>/g, '');
                 const meta = (item.meta || '').toLowerCase();
+                const fullText = `${title} ${description} ${content} ${meta}`.toLowerCase();
 
-                // Check for exact phrase match (highest priority)
-                if (title.includes(normalizedQuery)) score += 50;
-                if (description.includes(normalizedQuery)) score += 30;
-                if (content.includes(normalizedQuery)) score += 15;
+                const { score, matchingTerms } = scoreMatch(searchTerms, normalizedQuery, fullText);
 
-                // Check individual terms
+                // Extra scoring boost for media items in title
+                let titleBonus = 0;
+                if (title.includes(normalizedQuery)) {
+                    titleBonus += 50; // Boost for exact phrase in title
+                }
+                
+                // Boost for each search term found in title
                 searchTerms.forEach(term => {
-                    let termScore = 0;
-                    
-                    // Exact word matches (word boundaries)
-                    const wordRegex = new RegExp(`\\b${term}\\b`, 'i');
-                    if (wordRegex.test(title)) termScore += 20;
-                    else if (title.includes(term)) termScore += 15; // Partial match in title
-                    
-                    if (wordRegex.test(description)) termScore += 10;
-                    else if (description.includes(term)) termScore += 7; // Partial match in description
-                    
-                    if (wordRegex.test(content)) termScore += 3;
-                    else if (content.includes(term)) termScore += 1; // Partial match in content
-                    
-                    if (wordRegex.test(meta)) termScore += 5;
-                    else if (meta.includes(term)) termScore += 2; // Partial match in meta
-                    
-                    if (termScore > 0) {
-                        matchingTerms++;
-                        score += termScore;
+                    if (title.includes(term)) {
+                        titleBonus += 20; // Boost for each term in title
                     }
                 });
+                
+                const finalScore = score + titleBonus;
 
-                // Bonus for matching multiple terms (indicates relevance)
-                if (matchingTerms > 1) {
-                    score += matchingTerms * 5;
+                if (finalScore > 0) {
+                    results.push({
+                        type: 'media',
+                        title: item.title,
+                        description: item.description,
+                        content: item.content,
+                        date: item.date,
+                        mediaType: item.type,
+                        link: `media.html?tab=${item.type}s&open_id=${item.id}`,
+                        score: finalScore,
+                        matchingTerms,
+                        relevance: finalScore
+                    });
                 }
+            });
 
-                // Bonus for matching all search terms
-                if (matchingTerms === searchTerms.length) {
-                    score += 25;
-                }
+            // 2. Search through page content index
+            pageContentIndex.forEach(item => {
+                const { score, matchingTerms } = scoreMatch(searchTerms, normalizedQuery, item.searchText);
 
-                // Only include items with meaningful matches
                 if (score > 0) {
                     results.push({
                         ...item,
@@ -195,13 +365,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Sort by relevance score (highest first), then by date (newest first)
+            // Sort by relevance score (highest first), then by type priority
+            const typePriority = { media: 0, practice: 1, partner: 2, content: 3, page: 4 };
             results.sort((a, b) => {
                 if (b.score !== a.score) return b.score - a.score;
-                return new Date(b.date) - new Date(a.date);
+                return (typePriority[a.type] || 5) - (typePriority[b.type] || 5);
             });
 
-            displaySearchResults(results.slice(0, 10)); // Show top 10 results
+            displaySearchResults(results.slice(0, 15)); // Show top 15 results
         };
 
         // Display search results
@@ -217,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 border-radius: 8px !important;
                 box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
                 overflow-y: auto !important;
-                max-height: 500px !important;
+                max-height: 600px !important;
                 display: block !important;
             `;
             
@@ -226,17 +397,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            let resultsHTML = '<div class="search-results-header">Search Results</div>';
+            let resultsHTML = '<div class="search-results-header">Search Results (' + results.length + ')</div>';
             
             results.forEach(item => {
-                const typeIcon = item.type === 'article' ? 'fa-newspaper' : 
-                               item.type === 'news' ? 'fa-bullhorn' : 'fa-video';
-                const typeLabel = item.type.charAt(0).toUpperCase() + item.type.slice(1);
-                const date = new Date(item.date).toLocaleDateString();
-                const link = `media.html?tab=${item.type}s&open_id=${item.id}`;
+                let typeIcon = 'fa-file-alt';
+                let typeLabel = 'Content';
+                let date = '';
+
+                // Determine icon and label based on type
+                if (item.type === 'media') {
+                    typeIcon = item.mediaType === 'article' ? 'fa-newspaper' : 
+                               item.mediaType === 'news' ? 'fa-bullhorn' : 'fa-video';
+                    typeLabel = item.mediaType.charAt(0).toUpperCase() + item.mediaType.slice(1);
+                    date = new Date(item.date).toLocaleDateString();
+                } else if (item.type === 'practice') {
+                    typeIcon = 'fa-gavel';
+                    typeLabel = 'Practice Area';
+                } else if (item.type === 'partner') {
+                    typeIcon = 'fa-user-tie';
+                    typeLabel = 'Partner';
+                } else if (item.type === 'page') {
+                    typeIcon = 'fa-file-lines';
+                    typeLabel = 'Page';
+                } else if (item.type === 'content') {
+                    typeIcon = 'fa-paragraph';
+                    typeLabel = 'Section';
+                }
+
+                const description = item.description || item.content?.substring(0, 100) || '';
+                const dateDisplay = date ? `<span class="search-result-date">${date}</span>` : '';
                 
                 resultsHTML += `
-                    <div class="search-result-item" data-link="${link}">
+                    <div class="search-result-item" data-link="${item.link}">
                         <div class="search-result-icon">
                             <i class="fa-solid ${typeIcon}"></i>
                         </div>
@@ -244,9 +436,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="search-result-title">${item.title}</div>
                             <div class="search-result-meta">
                                 <span class="search-result-type">${typeLabel}</span>
-                                <span class="search-result-date">${date}</span>
+                                ${dateDisplay}
                             </div>
-                            <div class="search-result-description">${item.description.substring(0, 100)}${item.description.length > 100 ? '...' : ''}</div>
+                            <div class="search-result-description">${description.substring(0, 100)}${description.length > 100 ? '...' : ''}</div>
                         </div>
                     </div>
                 `;
@@ -515,6 +707,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
             modal.currentId = itemId;
+            
+            // Highlight the card in the grid
+            const gridContainerId = `${type}s-grid`;
+            const gridContainer = document.getElementById(gridContainerId);
+            if (gridContainer) {
+                // Remove highlight from all cards
+                gridContainer.querySelectorAll('.media-card.clickable').forEach(card => {
+                    card.classList.remove('highlight-active');
+                });
+                // Add highlight to the current card
+                const cardElement = gridContainer.querySelector(`[data-id="${id}"]`);
+                if (cardElement) {
+                    cardElement.classList.add('highlight-active');
+                    // Scroll to the highlighted card
+                    cardElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
             openModal(modal);
         };
         
@@ -669,10 +878,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Handle search functionality on media page
         if (searchQuery) {
-            displaySearchResultsOnPage(searchQuery);
             // Set search input value
             if (searchInput) {
                 searchInput.value = searchQuery;
+            }
+            
+            // Display search results immediately if data is already loaded, 
+            // otherwise wait for db-data-loaded event
+            if (mediaData.length > 0) {
+                displaySearchResultsOnPage(searchQuery);
             }
         } else {
             let linkToActivate = document.querySelector(`.tab-link[data-tab="${tabToActivate}"]`);
@@ -684,6 +898,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 linkToActivate.click();
             }
 
+            // Helper function to open content if it exists
+            const attemptOpenContent = () => {
+                if (openId) {
+                    const itemToOpen = mediaData.find(i => i.id == openId); // Use == for loose comparison
+                    if (itemToOpen) {
+                        console.log('[main.js] Opening content with ID:', openId, 'Type:', itemToOpen.type);
+                        // Open immediately on next tick to ensure DOM is ready
+                        setTimeout(() => {
+                            loadContent(itemToOpen.type, itemToOpen.id);
+                            openModal(modals[itemToOpen.type]);
+                        }, 200);
+                    } else {
+                        console.warn('[main.js] Could not find item with openId:', openId, 'Available IDs:', mediaData.map(i => i.id));
+                    }
+                }
+            };
+
             // Re-apply tab content when DB data loads
             document.addEventListener('db-data-loaded', (e) => {
                 // Update local mediaData with the fetched data
@@ -691,21 +922,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     mediaData = e.detail.mediaData;
                     console.log('[main.js] Media page updated with DB data:', mediaData.length, 'items');
                     updateModalKeys(); // Update modal navigation keys
+                    
+                    // If there's a pending search query, display results now that data is loaded
+                    if (searchQuery && mediaData.length > 0) {
+                        console.log('[main.js] Displaying search results after DB load for query:', searchQuery);
+                        displaySearchResultsOnPage(searchQuery);
+                    }
                 }
-                if (linkToActivate) {
+                if (linkToActivate && !searchQuery) {
                     linkToActivate.click();
                 }
+                // Try to open content after DB data loads
+                attemptOpenContent();
             });
 
-            if (openId) {
-                const itemToOpen = mediaData.find(i => i.id == openId); // Use == for loose comparison
-                if (itemToOpen) {
-                    setTimeout(() => loadContent(itemToOpen.type, itemToOpen.id), 150);
-                } else {
-                    console.warn('[main.js] Could not find item with openId:', openId);
-                }
+            // Try to open content if data is already loaded
+            if (openId && mediaData.length > 0) {
+                attemptOpenContent();
             }
         }
+
+        // Handle db-data-loaded event for both search and normal tab modes
+        document.addEventListener('db-data-loaded', (e) => {
+            // Update local mediaData with the fetched data
+            if (e.detail && e.detail.mediaData) {
+                mediaData = e.detail.mediaData;
+                console.log('[main.js] Media page updated with DB data:', mediaData.length, 'items');
+                updateModalKeys(); // Update modal navigation keys
+                
+                // If there's a pending search query, display results now that data is loaded
+                if (searchQuery && mediaData.length > 0) {
+                    console.log('[main.js] Displaying search results after DB load for query:', searchQuery);
+                    displaySearchResultsOnPage(searchQuery);
+                }
+            }
+        });
 
         // Function to display search results on the media page
         function displaySearchResultsOnPage(query) {
@@ -713,47 +964,65 @@ document.addEventListener('DOMContentLoaded', () => {
             const normalizedQuery = query.toLowerCase().trim();
             const searchTerms = normalizedQuery.split(/\s+/).filter(term => term.length > 0);
 
+            console.log('[main.js] Search page: Processing search for:', query, 'with terms:', searchTerms);
+            console.log('[main.js] Search page: Available media items:', mediaData.length);
+
             // Search through all media content with enhanced scoring
             mediaData.forEach(item => {
-                let score = 0;
-                let matchingTerms = 0;
-                
                 const title = (item.title || '').toLowerCase();
                 const description = (item.description || '').toLowerCase();
                 const content = (item.content || '').toLowerCase().replace(/<[^>]*>/g, '');
                 const meta = (item.meta || '').toLowerCase();
+                const fullText = `${title} ${description} ${content} ${meta}`.toLowerCase();
 
-                // Check for exact phrase match
-                if (title.includes(normalizedQuery)) score += 50;
-                if (description.includes(normalizedQuery)) score += 30;
-                if (content.includes(normalizedQuery)) score += 15;
+                let score = 0;
+                let matchingTerms = 0;
 
-                // Check individual terms
+                // Exact phrase match (highest priority)
+                if (title.includes(normalizedQuery)) score += 100;
+                if (description.includes(normalizedQuery)) score += 50;
+                if (content.includes(normalizedQuery)) score += 20;
+
+                // Individual term scoring
                 searchTerms.forEach(term => {
                     let termScore = 0;
                     
-                    const wordRegex = new RegExp(`\\b${term}\\b`, 'i');
-                    if (wordRegex.test(title)) termScore += 20;
-                    else if (title.includes(term)) termScore += 15;
+                    // Try word boundary matching first (for regular words)
+                    try {
+                        const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const wordRegex = new RegExp(`\\b${escapedTerm}\\b`, 'i');
+                        
+                        if (wordRegex.test(title)) {
+                            termScore += 40; // Strong match in title
+                        }
+                    } catch (e) {
+                        // If regex fails, skip word boundary matching
+                    }
                     
-                    if (wordRegex.test(description)) termScore += 10;
-                    else if (description.includes(term)) termScore += 7;
-                    
-                    if (wordRegex.test(content)) termScore += 3;
-                    else if (content.includes(term)) termScore += 1;
-                    
-                    if (wordRegex.test(meta)) termScore += 5;
-                    else if (meta.includes(term)) termScore += 2;
-                    
+                    // Always check for substring match as fallback
+                    if (termScore === 0) {
+                        // Check if term appears at word boundaries (simple check for numbers)
+                        const regex = new RegExp(`(^|\\s|-)${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$|[^a-z0-9])`, 'i');
+                        if (regex.test(fullText)) {
+                            termScore += 35; // Strong match for numbers/special content
+                        } else if (title.includes(term)) {
+                            termScore += 30; // Partial match in title
+                        } else if (description.includes(term)) {
+                            termScore += 15; // Match in description
+                        } else if (content.includes(term)) {
+                            termScore += 5; // Match in content
+                        }
+                    }
+
                     if (termScore > 0) {
                         matchingTerms++;
                         score += termScore;
                     }
                 });
 
-                // Bonuses for multiple term matches
-                if (matchingTerms > 1) score += matchingTerms * 5;
-                if (matchingTerms === searchTerms.length) score += 25;
+                // Bonus for matching multiple terms
+                if (matchingTerms > 1) score += matchingTerms * 10;
+                if (matchingTerms === searchTerms.length) score += 50;
 
                 if (score > 0) {
                     results.push({
@@ -765,6 +1034,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            console.log('[main.js] Search page: Found', results.length, 'matching items');
+
+            // Sort by relevance
             results.sort((a, b) => {
                 if (b.score !== a.score) return b.score - a.score;
                 return new Date(b.date) - new Date(a.date);
@@ -788,7 +1060,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchResultsSection = document.createElement('div');
                 searchResultsSection.id = 'search-results-section';
                 searchResultsSection.className = 'tab-content active';
-                document.querySelector('.media-section').appendChild(searchResultsSection);
+                const mediaSection = document.querySelector('.media-section');
+                if (mediaSection) {
+                    mediaSection.appendChild(searchResultsSection);
+                }
             } else {
                 searchResultsSection.classList.add('active');
             }
@@ -796,8 +1071,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Display search results header
             let headerHTML = `
                 <div class="search-results-page-header">
-                    <h2>Search Results for "${query}"</h2>
-                    <p>Found ${results.length} result${results.length !== 1 ? 's' : ''}</p>
+                    <h2>Search Results for "<strong>${query}</strong>"</h2>
+                    <p>Found <strong>${results.length}</strong> result${results.length !== 1 ? 's' : ''}</p>
                     <button id="clear-search-btn" class="clear-search-btn">
                         <i class="fa-solid fa-arrow-left"></i> Back to All Content
                     </button>
@@ -813,7 +1088,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             } else {
-                searchResultsSection.innerHTML = headerHTML + '<div class="media-grid" id="search-results-grid"></div>';
+                searchResultsSection.innerHTML = headerHTML + `
+                    <div class="media-grid" id="search-results-grid"></div>
+                    <div id="search-results-pagination"></div>
+                `;
                 
                 // Use existing pagination setup for search results
                 setupPagination(results, 'search-results-grid');
